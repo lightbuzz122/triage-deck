@@ -178,7 +178,7 @@ function doAction(a,opts={}){
     if(!already)zoomTo(a.region,true);
     if(a.fx)setTimeout(()=>playFx(a,S.keys[a.id]),already||reduce?60:560);
   }
-  if(a.sound)playSound(a.sound);
+  if(a.sound)playSound(val(a.sound,S));
   if(a.end){S.outcome=a.id;return transferOut(a);}
   C.after&&C.after(S,a,api);
   renderAll();
@@ -193,7 +193,7 @@ function transferOut(a){
 function layoutFor(v){return Object.assign({},C.views[v].markers,store.get(`td-${C.id}-${v}`)||{});}
 function setView(v){
   S.view=v;const V=C.views[v];
-  $("stage").style.aspectRatio=V.aspect;
+  $("stage").style.aspectRatio=V.aspect;{const p=String(V.aspect).split("/").map(Number);$("stage").style.setProperty("--ar",p.length>1?p[0]/p[1]:p[0]);}
   $("stateImgs").innerHTML=V.states?Object.entries(V.states).map(([k,src])=>`<img src="${src}" data-state="${k}" alt="${C.patient.name}, ${k}" class="off">`).join(""):`<img src="${V.img}" data-state="*" alt="${C.patient.name}, ${V.label.toLowerCase()} view">`;
   LAYOUT=layoutFor(v);
   $("viewSeg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.view===v));
@@ -309,7 +309,7 @@ $("btnLabels").onclick=()=>{const on=$("stage").classList.toggle("labels-on");$(
 function meta(a){return `${a.cost||0} min · ${a.tok?a.tok+" tok":"free"}`;}
 function rowHTML(a){
   const done=S.done[a.id]&&!a.repeat,res=S.results[a.id];
-  const btn=done?(a.viewer?`<button class="btn xs" data-view="${a.viewer}">View</button>`:a.sound?`<button class="btn xs" data-sound="${a.sound}">▶ Play</button>`:a.fx?`<button class="btn xs" data-a="${a.id}">Replay</button>`:"")
+  const btn=done?(a.viewer?`<button class="btn xs" data-view="${a.viewer}">View</button>`:a.sound?`<button class="btn xs" data-sound="${val(a.sound,S)}">▶ Play</button>`:a.fx?`<button class="btn xs" data-a="${a.id}">Replay</button>`:"")
     :`<button class="btn xs primary" data-a="${a.id}">${a.verb||TECH[a.tech]?.verb||"Do"}</button>`;
   return `<div class="arow${done?" done":""}"${a.region?` data-hr="${a.region}"`:""}><div class="nm">${TECH[a.tech]?.icon||""}<span>${a.t}<small>${meta(a)}</small></span></div><div>${btn}</div>${res&&S.done[a.id]?`<div class="res">${res}</div>`:""}</div>`;
 }
@@ -662,6 +662,13 @@ function playSound(kind){const a=ac();if(!a||!S)return;const t0=a.currentTime+.0
   else if(kind==="breath"){const per=60/S.v.rr;for(let i=0;i<3;i++)noiseBurst(t0+i*per,per*.95,500,.6,.35);}
   else if(kind==="bowel"){for(let i=0;i<6;i++)noiseBurst(t0+i*.55+Math.random()*.3,.18+Math.random()*.2,260+Math.random()*300,4,.4);}
   else if(kind==="percuss"){thump(t0,140,.7);thump(t0+.45,140,.7);}
+  else if(kind==="wheeze"||kind==="wheezesoft"){
+    /* polyphonic expiratory wheeze: several musical tones over a breath noise, loudest on breathing out */
+    const per=Math.max(1.6,60/S.v.rr*1.6),vol=kind==="wheeze"?.07:.03;
+    for(let i=0;i<3;i++){const t=t0+i*per;noiseBurst(t,per*.35,500,.6,.2);
+      [380,470,560,690].forEach((f,j)=>{const o=a.createOscillator(),gn=a.createGain();o.type="sine";o.frequency.setValueAtTime(f,t+per*.35);o.frequency.linearRampToValueAtTime(f*(.94+j*.01),t+per*.95);
+        gn.gain.setValueAtTime(.0001,t+per*.35);gn.gain.exponentialRampToValueAtTime(vol,t+per*.45);gn.gain.exponentialRampToValueAtTime(.0001,t+per*.95);o.connect(gn).connect(a.destination);o.start(t+per*.35);o.stop(t+per);});}}
+  else if(kind==="silent"){const per=60/S.v.rr;for(let i=0;i<4;i++)noiseBurst(t0+i*per,per*.8,450,.6,.025);}
 }
 $("btnSound").onclick=()=>{soundOn=!soundOn;if(soundOn)ac();$("btnSound").textContent=soundOn?"Sound on":"Sound off";$("btnSound").setAttribute("aria-pressed",soundOn);};
 
@@ -696,6 +703,15 @@ function endCase(){
 $("btnRetry").onclick=()=>startCase(C.id);
 $("btnLogo").onclick=()=>{show("viewLib");window.TD.onHome&&window.TD.onHome();};
 $("btnBack").onclick=$("btnLib").onclick=()=>{show("viewLib");window.TD.onHome&&window.TD.onHome();jump("cases");};
+
+/* HUD cards fade away while the pointer is over them, so the picture underneath stays visible; clicks still pass through */
+(()=>{const st=$("stage");if(!st)return;
+  const cards=()=>st.querySelectorAll(".hud-card");
+  const clear=()=>cards().forEach(c=>c.classList.remove("peek"));
+  st.addEventListener("pointermove",e=>{cards().forEach(c=>{const r=c.getBoundingClientRect(),pad=10;
+    c.classList.toggle("peek",e.clientX>=r.left-pad&&e.clientX<=r.right+pad&&e.clientY>=r.top-pad&&e.clientY<=r.bottom+pad);});});
+  st.addEventListener("pointerleave",clear);
+})();
 
 show("viewLib");
 })();
