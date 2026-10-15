@@ -22,6 +22,7 @@ const TECH={
   palpate:{name:"Palpate",verb:"Feel",icon:S_('<path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V11"/><path d="M11 10.5V4a1.5 1.5 0 0 1 3 0v7"/><path d="M14 10.5V5.5a1.5 1.5 0 0 1 3 0V13"/><path d="M17 11a1.5 1.5 0 0 1 3 0v3a7 7 0 0 1-7 7h-1a7 7 0 0 1-5.6-2.8L4 15.5a1.5 1.5 0 0 1 2.3-1.9L8 15"/>')},
   percuss:{name:"Percuss",verb:"Percuss",icon:S_('<path d="M4 15h11"/><path d="M15 10l4-4"/><path d="M13.5 11.5l-1 3.5"/><circle cx="19.5" cy="5.5" r="1.5"/>')},
   auscultate:{name:"Auscultate",verb:"Listen",icon:S_('<path d="M6 3v5a4 4 0 0 0 8 0V3"/><path d="M10 12v3a5 5 0 0 0 10 0v-1"/><circle cx="20" cy="11.5" r="2"/>')},
+  otoscope:{name:"Otoscope",verb:"Look",icon:S_('<circle cx="7" cy="8" r="4"/><path d="M10 10.5l6 6"/><path d="M14.5 15l3-3 4 4-3 3z"/>')},
   hammer:{name:"Reflex hammer",verb:"Tap",icon:S_('<path d="M14 4l6 6-3 1-4-4z"/><path d="M14.5 8.5L4 19"/>')},
   torch:{name:"Pen torch",verb:"Shine",icon:S_('<rect x="3" y="10" width="11" height="4" rx="1" transform="rotate(-30 8.5 12)"/><path d="M16 6l2-2M18 9l3-1M15 3l1-2"/>')},
   pin:{name:"Sensation",verb:"Test",icon:S_('<path d="M12 3v13"/><circle cx="12" cy="18.5" r="2.5"/>')},
@@ -250,6 +251,20 @@ function hideCloseup(){clearTimeout(closeTimer);$("closeup").classList.remove("o
 $("btnZoomOut").onclick=zoomOut;$("btnCloseBack").onclick=zoomOut;
 $("markers").addEventListener("click",e=>{const m=e.target.closest("[data-r]");if(!m||editing||!S||S.ended)return;zoomTo(m.dataset.r);});
 
+/* hover: highlight the body area a list row or marker refers to */
+let hoverKey=null;
+function setHover(k){
+  if(k===hoverKey)return;hoverKey=k;
+  document.querySelectorAll("#markers .mk").forEach(m=>m.classList.toggle("hl",m.dataset.r===k));
+  if(editing)return;
+  if(k&&C&&C.regions[k])$("sceneHint").innerHTML=`<b style="color:var(--accent)">${C.regions[k].name}</b>${C.regions[k].hint?` · ${C.regions[k].hint}`:""}`;
+  else $("sceneHint").textContent=curRegion?`At the ${C.regions[curRegion].name.toLowerCase()}.`:"Tap a marker to move in closer.";
+}
+["regionBody","examList","markers"].forEach(id=>{
+  $(id).addEventListener("pointerover",e=>{const el=e.target.closest("[data-hr],[data-r]");setHover(el?(el.dataset.hr||el.dataset.r):null);});
+  $(id).addEventListener("pointerleave",()=>setHover(null));
+});
+
 /* magnifier */
 function magActive(){return magOn||examTool==="inspect";}
 $("btnMag").onclick=()=>{magOn=!magOn;$("btnMag").setAttribute("aria-pressed",magOn);$("closeup").classList.toggle("mag",magActive());if(!magActive())$("loupe").style.display="none";};
@@ -296,14 +311,14 @@ function rowHTML(a){
   const done=S.done[a.id]&&!a.repeat,res=S.results[a.id];
   const btn=done?(a.viewer?`<button class="btn xs" data-view="${a.viewer}">View</button>`:a.sound?`<button class="btn xs" data-sound="${a.sound}">▶ Play</button>`:a.fx?`<button class="btn xs" data-a="${a.id}">Replay</button>`:"")
     :`<button class="btn xs primary" data-a="${a.id}">${a.verb||TECH[a.tech]?.verb||"Do"}</button>`;
-  return `<div class="arow${done?" done":""}"><div class="nm">${TECH[a.tech]?.icon||""}<span>${a.t}<small>${meta(a)}</small></span></div><div>${btn}</div>${res&&S.done[a.id]?`<div class="res">${res}</div>`:""}</div>`;
+  return `<div class="arow${done?" done":""}"${a.region?` data-hr="${a.region}"`:""}><div class="nm">${TECH[a.tech]?.icon||""}<span>${a.t}<small>${meta(a)}</small></span></div><div>${btn}</div>${res&&S.done[a.id]?`<div class="res">${res}</div>`:""}</div>`;
 }
 function pairHTML(g,list){
   const first=list[0];
   const sides=["R","L"].map(sd=>{const a=list.find(x=>x.side===sd);if(!a)return"";const k=S.keys[a.id];
     return S.done[a.id]?`<button class="btn xs got" data-a="${a.id}" title="Replay">${sd} ${k||"✓"}</button>`:`<button class="btn xs primary" data-a="${a.id}">${sd==="R"?"Right":"Left"}</button>`;}).join("");
   const res=["R","L"].map(sd=>{const a=list.find(x=>x.side===sd);return a&&S.done[a.id]?`<div><b>${sd==="R"?"Right":"Left"}:</b> ${S.results[a.id]}</div>`:"";}).join("");
-  return `<div class="arow${list.every(a=>S.done[a.id])?" done":""}"><div class="nm">${TECH[first.tech]?.icon||""}<span>${g}<small>${meta(first)} each side</small></span></div><div class="sides">${sides}</div>${res?`<div class="res">${res}</div>`:""}</div>`;
+  return `<div class="arow${list.every(a=>S.done[a.id])?" done":""}" data-hr="${first.region}"><div class="nm">${TECH[first.tech]?.icon||""}<span>${g}<small>${meta(first)} each side</small></span></div><div class="sides">${sides}</div>${res?`<div class="res">${res}</div>`:""}</div>`;
 }
 function listHTML(list,groupByTech){
   const out=[];const seen=new Set();
@@ -333,7 +348,7 @@ function renderRegion(){
   if(!curRegion){
     $("regionTitle").textContent="Patient overview";$("regionSub").textContent="Tap a body area to examine it";
     $("regionBody").innerHTML=`<div class="alist">${C.regionOrder.map(k=>{const acts=C.actions.filter(a=>a.region===k);const n=acts.filter(a=>S.done[a.id]).length;
-      return `<div class="arow"><div class="nm"><span>${C.regions[k].name}<small>${n} of ${acts.length} done${C.regions[k].hint?` · ${C.regions[k].hint}`:""}</small></span></div><div><button class="btn xs" data-zoom="${k}">Examine</button></div></div>`;}).join("")}</div>`;
+      return `<div class="arow hov" data-hr="${k}" data-zoom="${k}"><div class="nm"><span>${C.regions[k].name}<small>${n} of ${acts.length} done${C.regions[k].hint?` · ${C.regions[k].hint}`:""}</small></span></div><div><button class="btn xs" data-zoom="${k}">Examine</button></div></div>`;}).join("")}</div>`;
     return;
   }
   const R=C.regions[curRegion];
@@ -383,7 +398,7 @@ function renderExam(){
   const html=C.regionOrder.map(k=>{
     const acts=C.actions.filter(a=>a.region===k&&a.cat==="Exam"&&(examTool==="all"||a.tech===examTool));
     if(!acts.length)return"";
-    return `<div class="agroup-t" style="display:flex;justify-content:space-between;align-items:center">${C.regions[k].name}<button class="btn xs" data-zoom="${k}">Go to</button></div>${listHTML(acts,false)}`;
+    return `<div class="agroup-t" data-hr="${k}" style="display:flex;justify-content:space-between;align-items:center">${C.regions[k].name}<button class="btn xs" data-zoom="${k}">Go to</button></div>${listHTML(acts,false)}`;
   }).join("");
   $("examList").innerHTML=`<div class="alist">${html||'<p class="sub">Nothing for this tool.</p>'}</div>`;
 }
@@ -679,6 +694,7 @@ function endCase(){
   try{window.TD.onScore&&window.TD.onScore(C,score,S);}catch(e){console.error(e);}
 }
 $("btnRetry").onclick=()=>startCase(C.id);
+$("btnLogo").onclick=()=>{show("viewLib");window.TD.onHome&&window.TD.onHome();};
 $("btnBack").onclick=$("btnLib").onclick=()=>{show("viewLib");window.TD.onHome&&window.TD.onHome();jump("cases");};
 
 show("viewLib");

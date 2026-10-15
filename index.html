@@ -286,6 +286,20 @@ textarea.code{width:100%;min-height:200px;background:var(--bg);color:var(--fg);b
 .toast{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:40;background:var(--panel-2);border:1px solid var(--accent);border-radius:10px;padding:10px 12px;display:flex;gap:10px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.4);max-width:calc(100% - 32px)}
 
 
+/* player header logo + hover linking */
+header.top .logo{font-size:18px;gap:10px}header.top .logo .mark{width:32px;height:32px}
+header.top #crumb{border-left:1px solid var(--line);padding-left:14px}
+.mk.hl::after{transform:scale(1.45);background:#fff;box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 55%,transparent)}
+.mk.hl .lbl{opacity:1}
+.mk:hover::after{transform:scale(1.3)}
+.mk::after{transition:transform .18s,background .18s}
+.arow{transition:border-color .15s,background .15s}
+.arow:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.arow.hov{cursor:pointer}
+.arow.hov:hover{background:color-mix(in srgb,var(--accent) 7%,var(--panel-2))}
+.agroup-t[data-hr]{cursor:default}
+#sceneHint b{font-weight:600}
+
 /* Homepage */
 #viewLib{position:relative}
 .hnav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(10px);display:flex;align-items:center;gap:20px;height:72px;border-bottom:1px solid var(--line)}
@@ -536,7 +550,7 @@ textarea.code{width:100%;min-height:200px;background:var(--bg);color:var(--fg);b
 <body>
 <div class="wrap">
   <header class="top">
-    <div class="brand"><i aria-hidden="true"></i>TRIAGE DECK</div>
+    <button class="brand logo" id="btnLogo" aria-label="Triage Deck home" style="background:none;border:0;padding:0;cursor:pointer"><svg class="mark" viewBox="0 0 40 40" aria-hidden="true"><rect x="13" y="5" width="22" height="28" rx="5" transform="rotate(12 24 19)" fill="none" stroke="var(--accent)" stroke-width="2.4"/><rect x="5" y="8" width="22" height="28" rx="5" transform="rotate(-6 16 22)" fill="var(--fg)"/><path d="M16 16v10M11 21h10" stroke="var(--bg)" stroke-width="3" stroke-linecap="round" transform="rotate(-6 16 22)"/></svg><span>TRIAGE DECK</span></button>
     <span class="sub" id="crumb">Case library</span>
     <span class="spacer"></span>
     <button class="btn sm" id="btnLib" hidden>← Library</button>
@@ -570,7 +584,7 @@ textarea.code{width:100%;min-height:200px;background:var(--bg);color:var(--fg);b
         </div>
         <ul class="facts">
           <li><b id="factCases">2</b>playable cases</li>
-          <li><b>7</b>specialties in development</li>
+          <li><b>8</b>specialties in development</li>
           <li><b>3</b>disciplines planned</li>
         </ul>
       </div>
@@ -623,7 +637,7 @@ textarea.code{width:100%;min-height:200px;background:var(--bg);color:var(--fg);b
     <section class="sec" id="levels" aria-labelledby="lvlT">
       <div class="sec-head"><span class="rule" aria-hidden="true"></span><h2 id="lvlT">One bedside, every level.</h2><p>Three disciplines, three depths. Medicine is live now for students and specialists.</p></div>
       <div class="cards3">
-        <article class="dcard live spot"><div class="dicon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 27s-10-6-10-13a5.5 5.5 0 0 1 10-3 5.5 5.5 0 0 1 10 3c0 7-10 13-10 13z"/><path d="M8 16h4l2-4 3 7 2-3h5"/></svg></div><div class="dtop"><h3>Medicine</h3><span class="status ok">Available</span></div><p>Emergency and acute presentations across seven specialties, from the resus bay to disposition.</p><button class="btn sm arrow" data-jump="cases">Browse cases</button></article>
+        <article class="dcard live spot"><div class="dicon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 27s-10-6-10-13a5.5 5.5 0 0 1 10-3 5.5 5.5 0 0 1 10 3c0 7-10 13-10 13z"/><path d="M8 16h4l2-4 3 7 2-3h5"/></svg></div><div class="dtop"><h3>Medicine</h3><span class="status ok">Available</span></div><p>Emergency and acute presentations across eight specialties, from the resus bay to disposition.</p><button class="btn sm arrow" data-jump="cases">Browse cases</button></article>
         <article class="dcard spot"><div class="dicon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 5c-3 0-5 2.5-5 6 0 3 1.5 5 2.5 7 1 2.5 1 9 3.5 9 2 0 2-6 5-6s3 6 5 6c2.5 0 2.5-6.5 3.5-9 1-2 2.5-4 2.5-7 0-3.5-2-6-5-6-2.5 0-3.5 1.5-6 1.5S12.5 5 10 5z"/></svg></div><div class="dtop"><h3>Dentistry</h3><span class="status">Coming soon</span></div><p>Dental emergencies, facial swelling, trauma and medical emergencies in the dental chair.</p></article>
         <article class="dcard spot"><div class="dicon"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="16" cy="21" rx="6" ry="5"/><ellipse cx="8" cy="13" rx="2.5" ry="3.2"/><ellipse cx="24" cy="13" rx="2.5" ry="3.2"/><ellipse cx="12.5" cy="7.5" rx="2.4" ry="3"/><ellipse cx="19.5" cy="7.5" rx="2.4" ry="3"/></svg></div><div class="dtop"><h3>Veterinary science</h3><span class="status">Coming soon</span></div><p>Small-animal and equine emergencies with species-specific examination and monitoring.</p></article>
       </div>
@@ -656,7 +670,7 @@ textarea.code{width:100%;min-height:200px;background:var(--bg);color:var(--fg);b
         <article class="plan spot">
           <div class="ptop"><h3>Free</h3><span class="status ok">Available now</span></div>
           <p class="pdesc">Everything you need to try the bedside.</p>
-          <ul><li>Sample cases in cardiology and neurology</li><li>Every examination tool and viewer</li><li>Scored debriefs and stewardship feedback</li><li>Public leaderboard</li></ul>
+          <ul><li>Sample cases in cardiology, neurology and ENT</li><li>Every examination tool and viewer</li><li>Scored debriefs and stewardship feedback</li><li>Public leaderboard</li></ul>
           <button class="btn primary arrow" data-jump="cases">Try a free case</button>
         </article>
         <article class="plan feat spot">
@@ -809,6 +823,7 @@ textarea.code{width:100%;min-height:200px;background:var(--bg);color:var(--fg);b
 
 <script src="case-stemi.js"></script>
 <script src="case-neuro.js"></script>
+<script src="case-ent.js"></script>
 <script src="engine.js"></script>
 <script src="home.js"></script>
 </body>
